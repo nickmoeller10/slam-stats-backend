@@ -656,4 +656,5 @@ def calculate_standard_deviations(arr, key):
 
         return cutoff_points
 
-app.run()
+if __name__ == "__main__":
+    app.run()
