@@ -1,0 +1,18 @@
+{
+"cookies":
+  {
+    "swid": "{9C2B13E7-C1C7-4734-9499-E8D8896E49CA}",
+    "espn_s2":
+    "AEBMTvPLwna58wR7w7GScMEoMK5SZDdc0UZWs7yFVE6hWxPuRv%2BUa7EabE0jGEb9Ksp7hUIru%2BcmI8AsEPvzoqb2pWAMYJXpowcSZfywo%2Bcrq41TTGSoiEdxTjnjCjoebOYWtLCSagGUiVX8%2BWT94fDfbhFk5TEtreHgh8CF%2FMv95%2B31YjDZj9kwPDTif3MOSAL14IJi%2FCmmQbcMToWY9iIFw9sJ4ggCBg1Qea9bHSJ8%2FkVkXi0RCsn0Q9gQJhkqD9vJqodAE%2BWHwGqmvEa5hkpo%2Bqh4k%2FJLJD3p1wGaLN8SBQ%3D%3D"
+  },
+  "league":
+  {
+    "league_id": 277919,
+    "season": 2022
+  },
+  "url": {
+    "fantasy_league":
+    "http://fantasy.espn.com/apis/v3/games/fba/seasons/{}/segments/0/leagues/{}",
+    "nba": "http://fantasy.espn.com/apis/v3/games/fba/seasons/{}"
+  }
+}
