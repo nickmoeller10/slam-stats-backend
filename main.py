@@ -94,9 +94,12 @@ def create_app():
 
     @app.route('/player-info', methods=['GET'])
     def getPlayerInfoApi():
+        global players_data
         return players_data
 
     def generatePlayerInfo():
+        global playerInfo  # Declare playerInfo as global
+        global definitions_obj  # Declare definitions_obj as global
         players = copy.deepcopy(playerInfo['players'])
         all_teams = definitions_obj.get_teams()
         eligible_positions = definitions_obj.get_eligible_positions()
@@ -135,10 +138,12 @@ def create_app():
 
     @app.route('/standard-deviations', methods=['GET'])
     def getStandardDeviations():
+        global standard_deviation_cutoffs
         return jsonify(standard_deviation_cutoffs)
 
     # WORKS
     def generateStandardDeviations():
+        global playerInfo
         players = copy.deepcopy(playerInfo['players'])
         #standardDeviations = generateStandardDeviations(players)
         standardDeviations = standard_deviation()
@@ -163,6 +168,8 @@ def create_app():
     #WORKS
     @app.route('/player-rankings', methods=['GET'])
     def getPlayerRankings():
+        global playerInfo
+        global definitions_obj
         players = playerInfo['players']
         player_list = []
         for x in players:
@@ -176,11 +183,13 @@ def create_app():
     # WORKS
     @app.route('/fantasy-stat-titles', methods=['GET'])
     def getFantasyStatTitles():
+        global EspnFantasyLeague
         return EspnFantasyLeague.fantasy_stats
 
     # WORKS
     @app.route('/league', methods=['GET'])
     def getLeagueInfo():
+        global fantasy_team_data
         fantasy_teams = fantasy_team_data['teams']
         teams_list = []
         for fantasy_team in fantasy_teams:
@@ -192,6 +201,7 @@ def create_app():
     # WORKS
     @app.route('/rosters', methods=['GET'])
     def getRosters():
+        global fantasy_team_data
         fantasy_teams = fantasy_team_data['teams']
         rosters = []
         for fantasy_team in fantasy_teams:
@@ -599,6 +609,7 @@ def create_app():
                     standardDeviations.tpm_prevProj.append(totals['17'])
                 if '20' in totals.keys():
                     standardDeviations.ftp_prevProj.append(totals['20'])
+
     def map_teams(player_list, all_teams):
         player_list_copy = copy.deepcopy(player_list)
         for player in player_list_copy:
@@ -606,6 +617,7 @@ def create_app():
             team_name = all_teams[curr_team_id][1]
             player['proTeamId'] = team_name
         return player_list_copy
+
     def map_eligible_positions(player_list, eligible_positions):
         player_list_copy = copy.deepcopy(player_list)
         for player in player_list_copy:
