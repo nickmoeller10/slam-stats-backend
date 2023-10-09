@@ -15,6 +15,11 @@ from espn_fantasy_league import espn_fantasy_league
 from definitions import definitions
 from standard_deviation import standard_deviation
 
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
 def create_app():
 
     config = read_json("config.json")
@@ -90,7 +95,12 @@ def create_app():
             players_data = generatePlayerInfo()
             standard_deviation_cutoffs = generateStandardDeviations();
 
-        return jsonify({"message": "Configuration updated successfully"})
+        response = {
+            'message': "Successfully Created League",
+            'players_info': players_data
+        }
+
+        return jsonify(response)
 
     @app.route('/player-info', methods=['GET'])
     def getPlayerInfoApi():
