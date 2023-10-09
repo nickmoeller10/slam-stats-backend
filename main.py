@@ -96,16 +96,37 @@ def create_app():
             standard_deviation_cutoffs = generateStandardDeviations();
 
         response = {
-            'message': "Successfully Created League",
-            'players_info': players_data
+            'message': "Successfully Created League"
+           # 'players_info': players_data
         }
 
         return jsonify(response)
+
+    # @app.route('/player-info', methods=['GET'])
+    # def getPlayerInfoApi():
+    #     global players_data
+    #     page = request.args.get('page', default=1, type=int)
+    #     page_size = request.args.get('pageSize', default=50, type=int)
+    #
+    #     # Calculate the start and end indices for the current page
+    #     start_index = (page - 1) * page_size
+    #     end_index = start_index + page_size
+    #
+    #     # Get the data for the current page
+    #     current_page_data = players_data[start_index:end_index]
+    #
+    #     # Return the current page's data and total item count
+    #     #return current_page_data
+    #     return {
+    #         'data': current_page_data,
+    #         'total_items': len(players_data)
+    #     }
 
     @app.route('/player-info', methods=['GET'])
     def getPlayerInfoApi():
         global players_data
         return players_data
+
 
     def generatePlayerInfo():
         global playerInfo  # Declare playerInfo as global
