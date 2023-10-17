@@ -170,17 +170,27 @@ class espn_fantasy_league:
         It requires the `mTeam` endpoint data
         '''
         data = self.get_division_team_setting_data()
-        stats = [team['valuesByStat'] for team in data['teams']]
-        team_abbrs = [team['abbrev'] for team in data['teams']]
-        # make dataframe
-        stat_table = pd.DataFrame(data=stats, index=team_abbrs)
-        # select only headers of interest
-        stat_table = stat_table.loc[:, self.stat_id_abbr_dict.keys()]
-        # rename stat headers to match the web app
-        stat_table.rename(columns=self.stat_id_abbr_dict, inplace=True)
-        # update the column data types
-        stat_table.astype(self.dtypes)
-        return stat_table[self.fantasy_stats]
+
+      #  stats = [team['valuesByStat'] for team in data['teams']]
+        if all('valuesByStat' in team for team in data['teams']):
+            stats = [team['valuesByStat'] if 'valuesByStat' in team else None for team in data['teams']]
+            team_abbrs = [team['abbrev'] for team in data['teams']]
+            # make dataframe
+            stat_table = pd.DataFrame(data=stats, index=team_abbrs)
+            # select only headers of interest
+            stat_table = stat_table.loc[:, self.stat_id_abbr_dict.keys()]
+            # rename stat headers to match the web app
+            stat_table.rename(columns=self.stat_id_abbr_dict, inplace=True)
+            # update the column data types
+            stat_table.astype(self.dtypes)
+            return stat_table[self.fantasy_stats]
+        else:
+            # Need to fix this.
+            team_abbrs = [team['abbrev'] for team in data['teams']]
+            default_data = pd.DataFrame(0, index=team_abbrs, columns=self.fantasy_stats)
+            # stats = [team['valuesByStat'] if 'valuesByStat' in team else None for team in data['teams']]
+            # stat_table = pd.DataFrame(data=stats, index=team_abbrs)
+            return default_data
     def make_standings(self, division='all'):
         '''
         Makes the *current* standings table of the fantasy teams

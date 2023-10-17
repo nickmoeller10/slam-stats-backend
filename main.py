@@ -14,6 +14,8 @@ from utils import read_json
 from espn_fantasy_league import espn_fantasy_league
 from definitions import definitions
 from standard_deviation import standard_deviation
+from utils import get_logger
+logger = get_logger(__name__)
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -102,26 +104,6 @@ def create_app():
 
         return jsonify(response)
 
-    # @app.route('/player-info', methods=['GET'])
-    # def getPlayerInfoApi():
-    #     global players_data
-    #     page = request.args.get('page', default=1, type=int)
-    #     page_size = request.args.get('pageSize', default=50, type=int)
-    #
-    #     # Calculate the start and end indices for the current page
-    #     start_index = (page - 1) * page_size
-    #     end_index = start_index + page_size
-    #
-    #     # Get the data for the current page
-    #     current_page_data = players_data[start_index:end_index]
-    #
-    #     # Return the current page's data and total item count
-    #     #return current_page_data
-    #     return {
-    #         'data': current_page_data,
-    #         'total_items': len(players_data)
-    #     }
-
     @app.route('/player-info', methods=['GET'])
     def getPlayerInfoApi():
         global players_data
@@ -134,6 +116,15 @@ def create_app():
         players = copy.deepcopy(playerInfo['players'])
         all_teams = definitions_obj.get_teams()
         eligible_positions = definitions_obj.get_eligible_positions()
+        currentSeason = config["league"]["season"]
+        currentSeasonId = '00' + str(currentSeason)  # 002024 is 2024 season (current szn)
+        seasonProjectionsId = '10' + str(currentSeason)  # 102024 is 2024 Projections
+        prevSeasonId = '00' + str(currentSeason-1)  # 002023 is prev season
+        prevSeasonProjectionsId = '10' + str(currentSeason - 1)  # 102023 is prev Projections
+        last7Id = '01' + str(currentSeason)  # 012024 is last 7
+        last15Id = '02' + str(currentSeason)  # 022024 is last 15 usually
+        last30Id = '03' + str(currentSeason)     # 032024 is last 30
+
         for x in players:
             # Gives proper names to ratings
             if 'ratings' in x:
@@ -147,17 +138,38 @@ def create_app():
                     x['ratings']['ratingsPrev30'] = x['ratings'].pop('3')
             # Adds stat container object
             x['player']['statContainer'] = {}
-            x['player']['statContainer']['currentSeason'] = x['player']['stats'][0]
-            x['player']['statContainer']['lastFifteen'] = x['player']['stats'][1]
-            x['player']['statContainer']['lastSeven'] = x['player']['stats'][2]
-            if len(x['player']['stats']) > 3:
-                x['player']['statContainer']['prevSeason'] = x['player']['stats'][3]
-            if len(x['player']['stats']) > 4:
-                x['player']['statContainer']['lastThirty'] = x['player']['stats'][4]
-            if len(x['player']['stats']) > 5:
-                x['player']['statContainer']['seasonProjections'] = x['player']['stats'][5]
-            if len(x['player']['stats']) == 7:
-                x['player']['statContainer']['prevSeasonProjections'] = x['player']['stats'][6]
+            # if x['player']['firstName'] == "Victor":
+            #     print("hey")
+            if 'stats' not in x['player']:
+                print(x['player']['fullName'])
+            else:
+                # loop through each array
+                for statDict in x['player']['stats']:
+                    if statDict['id'] == currentSeasonId:
+                        x['player']['statContainer']['currentSeason'] = statDict
+                    elif statDict['id'] == last7Id:
+                        x['player']['statContainer']['lastSeven'] = statDict
+                    elif statDict['id'] == last15Id:
+                        x['player']['statContainer']['lastFifteen'] = statDict
+                    elif statDict['id'] == last30Id:
+                        x['player']['statContainer']['lastThirty'] = statDict
+                    elif statDict['id'] == prevSeasonId:
+                        x['player']['statContainer']['prevSeason'] = statDict
+                    elif statDict['id'] == seasonProjectionsId:
+                        x['player']['statContainer']['seasonProjections'] = statDict
+                    elif statDict['id'] == prevSeasonProjectionsId:
+                        x['player']['statContainer']['prevSeasonProjections'] = statDict
+                # x['player']['statContainer']['currentSeason'] = x['player']['stats'][0]
+                # x['player']['statContainer']['lastFifteen'] = x['player']['stats'][1]
+                # x['player']['statContainer']['lastSeven'] = x['player']['stats'][2]
+                # if len(x['player']['stats']) > 3:
+                #     x['player']['statContainer']['prevSeason'] = x['player']['stats'][3]
+                # if len(x['player']['stats']) > 4:
+                #     x['player']['statContainer']['lastThirty'] = x['player']['stats'][4]
+                # if len(x['player']['stats']) > 5:
+                #     x['player']['statContainer']['seasonProjections'] = x['player']['stats'][5]
+                # if len(x['player']['stats']) == 7:
+                #     x['player']['statContainer']['prevSeasonProjections'] = x['player']['stats'][6]
             curr_team_id = x['player']['proTeamId']
             team_name = all_teams[curr_team_id][2]
             x['player']['proTeamId'] = team_name
@@ -180,12 +192,15 @@ def create_app():
         standardDeviations = standard_deviation()
         for x in players:
             index = 0;
-            stats = x['player']['stats']
-            # print(x['player']['fullName'])
-            for period in stats:
-                # print(period)
-                map_standard_deviations(standardDeviations, period, index)
-                index = index + 1;
+            if 'stats' not in x['player']:
+                print(x['player']['firstName'])
+            else:
+                stats = x['player']['stats']
+                # print(x['player']['fullName'])
+                for period in stats:
+                    # print(period)
+                    map_standard_deviations(standardDeviations, period)
+                    index = index + 1;
 
         standard_deviations_Dict = standardDeviations.to_dict()
         #standard_deviations_data = standardDeviations.to_dict()
@@ -250,11 +265,21 @@ def create_app():
     def root():
         return 'Hello world'
 
-    def map_standard_deviations(standardDeviations, period, index):
+    def map_standard_deviations(standardDeviations, period):
+        periodId = period['id']
+        currentSeason = config["league"]["season"]
+        currentSeasonId = '00' + str(currentSeason)
+        seasonProjectionsId = '10' + str(currentSeason)
+        prevSeasonId = '00' + str(currentSeason - 1)
+        prevSeasonProjectionsId = '10' + str(currentSeason - 1)
+        last7Id = '01' + str(currentSeason)
+        last15Id = '02' + str(currentSeason)
+        last30Id = '03' + str(currentSeason)
+
         # Average Stats
         if 'averageStats' in period.keys():
             average_stats = period['averageStats']
-            if index == 0:
+            if periodId == currentSeasonId:
                 if '0' in average_stats.keys():
                     standardDeviations.points_avg_curr.append(average_stats['0'])
 
@@ -282,7 +307,7 @@ def create_app():
                     standardDeviations.tpm_avg_curr.append(average_stats['17'])
                 if '20' in average_stats.keys():
                     standardDeviations.ftp_avg_curr.append(average_stats['20'])
-            if index == 1:
+            if periodId == last15Id:
                 if '0' in average_stats.keys():
                     standardDeviations.points_avg_15.append(average_stats['0'])
                 if '1' in average_stats.keys():
@@ -310,7 +335,7 @@ def create_app():
                     standardDeviations.ftp_avg_15.append(average_stats['20'])
                 if '17' in average_stats.keys():
                     standardDeviations.tpm_avg_15.append(average_stats['17'])
-            if index == 2:
+            if periodId == last7Id:
                 if '0' in average_stats.keys():
                     standardDeviations.points_avg_7.append(average_stats['0'])
                 if '1' in average_stats.keys():
@@ -337,7 +362,7 @@ def create_app():
                     standardDeviations.tpm_avg_7.append(average_stats['17'])
                 if '20' in average_stats.keys():
                     standardDeviations.ftp_avg_7.append(average_stats['20'])
-            if index == 3:
+            if periodId == prevSeasonId:
                 if '0' in average_stats.keys():
                     standardDeviations.points_avg_prev.append(average_stats['0'])
                 if '1' in average_stats.keys():
@@ -365,7 +390,7 @@ def create_app():
                     standardDeviations.tpm_avg_prev.append(average_stats['17'])
                 if '20' in average_stats.keys():
                     standardDeviations.ftp_avg_prev.append(average_stats['20'])
-            if index == 4:
+            if periodId == last30Id:
                 if '0' in average_stats.keys():
                     standardDeviations.points_avg_30.append(average_stats['0'])
                 if '1' in average_stats.keys():
@@ -392,7 +417,7 @@ def create_app():
                     standardDeviations.tpm_avg_30.append(average_stats['17'])
                 if '20' in average_stats.keys():
                     standardDeviations.ftp_avg_30.append(average_stats['20'])
-            if index == 5:
+            if periodId == seasonProjectionsId:
                 if '0' in average_stats.keys():
                     standardDeviations.points_avg_proj.append(average_stats['0'])
                 if '1' in average_stats.keys():
@@ -420,7 +445,7 @@ def create_app():
                     standardDeviations.tpm_avg_proj.append(average_stats['17'])
                 if '20' in average_stats.keys():
                     standardDeviations.ftp_avg_proj.append(average_stats['20'])
-            if index == 6:
+            if periodId == prevSeasonProjectionsId:
                 if '0' in average_stats.keys():
                     standardDeviations.points_avg_prevProj.append(average_stats['0'])
                 if '1' in average_stats.keys():
@@ -450,7 +475,7 @@ def create_app():
         # Total Stats
         if 'stats' in period.keys():
             totals = period['stats']
-            if index == 0:
+            if periodId == currentSeasonId:
                 if '0' in totals.keys():
                     standardDeviations.points_curr.append(totals['0'])
                 if '1' in totals.keys():
@@ -478,7 +503,7 @@ def create_app():
                     standardDeviations.tpm_curr.append(totals['17'])
                 if '20' in totals.keys():
                     standardDeviations.ftp_curr.append(totals['20'])
-            if index == 1:
+            if periodId == last15Id:
                 if '0' in totals.keys():
                     standardDeviations.points_15.append(totals['0'])
                 if '1' in totals.keys():
@@ -505,7 +530,7 @@ def create_app():
                     standardDeviations.tpm_15.append(totals['17'])
                 if '20' in totals.keys():
                     standardDeviations.ftp_15.append(totals['20'])
-            if index == 2:
+            if periodId == last7Id:
                 if '0' in totals.keys():
                     standardDeviations.points_7.append(totals['0'])
                 if '1' in totals.keys():
@@ -532,7 +557,7 @@ def create_app():
                     standardDeviations.tpm_7.append(totals['17'])
                 if '20' in totals.keys():
                     standardDeviations.ftp_7.append(totals['20'])
-            if index == 3:
+            if periodId == prevSeasonId:
                 if '0' in totals.keys():
                     standardDeviations.points_prev.append(totals['0'])
                 if '1' in totals.keys():
@@ -559,7 +584,7 @@ def create_app():
                     standardDeviations.tpm_prev.append(totals['17'])
                 if '20' in totals.keys():
                     standardDeviations.ftp_prev.append(totals['20'])
-            if index == 4:
+            if periodId == last30Id:
                 if '0' in totals.keys():
                     standardDeviations.points_30.append(totals['0'])
                 if '1' in totals.keys():
@@ -586,7 +611,7 @@ def create_app():
                     standardDeviations.tpm_30.append(totals['17'])
                 if '20' in totals.keys():
                     standardDeviations.ftp_30.append(totals['20'])
-            if index == 5:
+            if periodId == seasonProjectionsId:
                 if '0' in totals.keys():
                     standardDeviations.points_proj.append(totals['0'])
                 if '1' in totals.keys():
@@ -613,7 +638,7 @@ def create_app():
                     standardDeviations.tpm_proj.append(totals['17'])
                 if '20' in totals.keys():
                     standardDeviations.ftp_proj.append(totals['20'])
-            if index == 6:
+            if periodId == prevSeasonProjectionsId:
                 if '0' in totals.keys():
                     standardDeviations.points_prevProj.append(totals['0'])
                 if '1' in totals.keys():
