@@ -37,7 +37,7 @@ class espn_fantasy_league:
         self.simulation_stats = self.poisson_stats + ['FGM', 'FTM']
         self.team_id_abbr_dict = {}
         self.team_id_name_dict = {}
-        self.team_abbr_name_dict = {}
+        #self.team_abbr_name_dict = {}
         self.division_id_name_dict = {}
         self.n_teams = None
         self.division_setting_data = None
@@ -142,17 +142,17 @@ class espn_fantasy_league:
             team['id']: team['abbrev'] for team in data['teams']
         }
         self.team_id_name_dict = {
-            team['id']: team['location'] + ' ' + team['nickname']
+            team['id']: team['name']
             for team in data['teams']
         }
         self.team_abbr_name_dict = {
             v: self.team_id_name_dict[k]
             for k, v in self.team_id_abbr_dict.items()
         }
-        self.division_id_name_dict = {
-            u['id']: u['name']
-            for u in data['settings']['scheduleSettings']['divisions']
-        }
+        # self.division_id_name_dict = {
+        #     u['id']: u['name']
+        #     for u in data['settings']['scheduleSettings']['divisions']
+        # }
         if len(self.division_id_name_dict) > 1:
             logger.warning('There are more than 1 divisions')
         self.n_teams = len(data['teams'])
